@@ -60,7 +60,8 @@ def generate_image(product_name):
     payload['steps'] = 50
 
     response = requests.post(url, headers=headers, json=payload)
-    filename = check_and_create_filename(product_name.replace(" ", "_")+".png")
+    filenamestring = product_name.replace(" ", "_")+".png"
+    filename = check_and_create_filename(filenamestring)
     image_path = ""
 
     # Processing the response
@@ -69,7 +70,7 @@ def generate_image(product_name):
         for i, image in enumerate(data["artifacts"]):
             with open(f"{filename}", "wb") as f:
                 f.write(base64.b64decode(image["base64"]))
-                image_path = os.path.realpath(filename)
+                image_path = f"/{filename}"
 
     return image_path
 
@@ -79,10 +80,10 @@ def generate_image(product_name):
 def check_and_create_filename(filename):
     base_name, extension = os.path.splitext(filename)
     counter = 1
-    new_filename = filename
+    new_filename = f"static/{filename}"
 
     while os.path.exists(new_filename):
-        new_filename = f"{base_name}_{counter}{extension}"
+        new_filename = f"static/{base_name}_{counter}{extension}"
         counter += 1
 
     return new_filename
