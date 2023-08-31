@@ -21,21 +21,29 @@ def generate():
     # This will download gpt4all-j v1.3 groovy model, which is ~3.7GB
     gptj = gpt4all.GPT4All("ggml-gpt4all-j-v1.3-groovy")
 
+    request_text = request.args.get("prompt")
+
     # We create 2 prompts, one for the description and then another one for the name of the product
     prompt_description = 'You are a business consultant. Please write a short description for a product idea for an online shop inspired by the following concept: "' + \
-        request.args.get(
-            "prompt") + '"'
+        request_text + '"'
     messages_description = [{"role": "user", "content": prompt_description}]
     description = gptj.chat_completion(messages_description)[
         'choices'][0]['message']['content']
 
-    prompt_name = 'You are a business consultant. Please write a name of maximum 5 words for a product with the following description: "' + description + '"'
+    prompt_name = 'You are a business consultant. Please write a name of maximum 5 words for a product with the following description: "' + request_text + '"'
     messages_name = [{"role": "user", "content": prompt_name}]
-    name = gptj.chat_completion(messages_name)[
-        'choices'][0]['message']['content']
+    short_description = gptj.chat_completion(
+        messages_name
+    )['choices'][0]['message']['content']
 
-    image_path = generate_image(name)
-    result = {"name": name, "description": description, "image": image_path}
+    print(short_description)
+
+    image_path = generate_image(short_description)
+    result = {
+        "name": short_description,
+        "description": description,
+        "image": image_path
+    }
 
     return jsonify(result)
 
@@ -58,8 +66,10 @@ def generate_image(product_name):
     payload['width'] = 512
     payload['samples'] = 1
     payload['steps'] = 50
-
+    print("request to stable duffusion")
     response = requests.post(url, headers=headers, json=payload)
+    print("response from stable duffusion")
+    print(response.status_code)
     filenamestring = product_name.replace(" ", "_")+".png"
     filename = check_and_create_filename(filenamestring)
     image_path = ""
